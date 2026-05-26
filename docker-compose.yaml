@@ -1,0 +1,58 @@
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+volumes:
+  traefik-data:
+
+
+services:
+  traefik:
+    image: traefik:v3
+    container_name: traefik
+    restart: unless-stopped
+    logging: *default-logging
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:8443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--certificatesresolvers.letsencrypt.acme.email=infra@iex.ec"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+    ports:
+      - "80:80"
+      - "8443:8443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-data:/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - TZ=Europe/Paris
+
+  nox-cvms-exporter:
+    image: ${REGISTRY}/nox-cvms-exporter:${NOX_CVMS_EXPORTER_VERSION}
+    container_name: nox-cvms-exporter
+    restart: unless-stopped
+    network_mode: host
+    logging: *default-logging
+    environment:
+      - RUST_LOG=info
+      - NOX_CVMS_EXPORTER_SERVER__PORT=8080
+      - NOX_CVMS_EXPORTER_SUFFIXE_URL=${NOX_CVMS_EXPORTER_SUFFIXE_URL}
+      - NOX_CVMS_EXPORTER_QUOTE_SERVICE_PORT=9999
+      - NOX_CVMS_EXPORTER_DSTACK_VMM_URL=http://127.0.0.1:9080
+      - NOX_CVMS_EXPORTER_MACHINE_ID=${NOX_CVMS_EXPORTER_MACHINE_ID}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nox-cvms-exporter.entrypoints=websecure"
+      - "traefik.http.routers.nox-cvms-exporter.rule=Host(`${NOX_CVMS_EXPORTER_HOSTNAME}`)"
+      - "traefik.http.routers.nox-cvms-exporter.tls=true"
+      - "traefik.http.routers.nox-cvms-exporter.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nox-cvms-exporter.loadbalancer.server.url=http://host.docker.internal:8080"
