@@ -55,12 +55,15 @@ pub async fn get_active_cvms(
     let mut groups: HashMap<String, CvmSummary> = HashMap::new();
 
     for cvm in cvms {
+        let Some(instance_id) = cvm.instance_id else {
+            continue;
+        };
         let instance = CvmInstance {
             url: format!(
                 "https://{}-{}.{}",
-                cvm.instance_id, state.config.quote_service_port, state.config.suffixe_url
+                instance_id, state.config.quote_service_port, state.config.suffixe_url
             ),
-            instance_id: cvm.instance_id,
+            instance_id,
             machine_id: state.config.machine_id.clone(),
         };
 
