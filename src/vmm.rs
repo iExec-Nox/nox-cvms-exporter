@@ -6,7 +6,7 @@ use crate::error::AppError;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Cvm {
     pub app_id: String,
-    pub instance_id: String,
+    pub instance_id: Option<String>,
     pub name: String,
     pub status: String,
 }
