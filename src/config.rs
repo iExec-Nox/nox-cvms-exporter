@@ -10,10 +10,6 @@ use tracing::debug;
 pub struct Config {
     /// HTTP server settings.
     pub server: ServerConfig,
-    /// URL suffix appended to proxied requests.
-    pub suffixe_url: String,
-    /// Port of quote service
-    pub quote_service_port: u16,
     /// Base URL of the dstack-vmm instance to query.
     pub dstack_vmm_url: String,
     /// Identifier of the machine running this exporter.
@@ -36,8 +32,6 @@ impl Config {
         let config = ConfigBuilder::builder()
             .set_default("server.host", "0.0.0.0")?
             .set_default("server.port", 8080)?
-            .set_default("suffixe_url", "")?
-            .set_default("quote_service_port", 9999)?
             .set_default("dstack_vmm_url", "http://127.0.0.1:9080")?
             .set_default("machine_id", "")?
             .add_source(

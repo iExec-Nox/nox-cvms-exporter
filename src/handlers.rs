@@ -35,7 +35,6 @@ pub async fn not_found(uri: Uri) -> impl IntoResponse {
 #[derive(Debug, Serialize)]
 pub struct CvmInstance {
     pub instance_id: String,
-    pub url: String,
     pub machine_id: String,
 }
 
@@ -59,10 +58,6 @@ pub async fn get_active_cvms(
             continue;
         };
         let instance = CvmInstance {
-            url: format!(
-                "https://{}-{}.{}",
-                instance_id, state.config.quote_service_port, state.config.suffixe_url
-            ),
             instance_id,
             machine_id: state.config.machine_id.clone(),
         };
